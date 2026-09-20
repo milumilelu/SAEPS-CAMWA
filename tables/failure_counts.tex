@@ -1,0 +1,17 @@
+\begin{table}[!htbp]
+\centering
+\caption{Terminal failure categories for the historical accuracy cohorts.}
+\label{tab:failure_counts}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l *{6}{S[table-format=2.0]}}
+\toprule
+{Cohort} & {Planned} & {Accepted} & {\shortstack{State\\center}} & {Solve} & {Non-finite} & {Other} \\
+\midrule
+Burgers & 15 & 12 & 3 & 0 & 0 & 0 \\
+Allen--Cahn & 10 & 9 & 1 & 0 & 0 & 0 \\
+Coupled & 10 & 8 & 2 & 0 & 0 & 0 \\
+\bottomrule
+\end{tabular}
+\par\vspace{3pt}\begin{minipage}{.98\linewidth}\footnotesize Burgers failures are seeds 57, 61, and 63; Allen--Cahn fails at seed 81; coupled failures are 219 and 221. All are recorded as state-center acceptance failures. Counts classify the primary accuracy endpoint, not the separate profile experiments or nonbinding score diagnostics. The source aggregates are listed in the revision provenance. This classification does not assume ignorable missingness or alter historical acceptance gates.\end{minipage}
+\end{table}

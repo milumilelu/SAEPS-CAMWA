@@ -1,0 +1,17 @@
+\begin{table}[!htbp]
+\centering
+\caption{The advantage persists across paired, trained architectures.}
+\label{tab:architecture}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{l S[table-format=3.0] c S[table-format=2.4] S[table-format=1.3e-1,scientific-notation=true] S[table-format=1.6]}
+\toprule
+{Architecture} & {$n_\theta$} & {Valid} & {Median $E_{\rm raw}$} & {Median $E_{\rm SAEPS}$} & {Coefficient error} \\
+\midrule
+2--16--1 & 65 & 6/6 & 16.797 & 0.0009224 & 0.01302 \\
+2--32--1 & 129 & 6/6 & 16.931 & 0.0006087 & 0.007905 \\
+2--16--16--1 & 337 & 6/6 & 17.266 & 0.0004322 & 0.004592 \\
+\bottomrule
+\end{tabular}
+\par\vspace{3pt}\begin{minipage}{.98\linewidth}\footnotesize Each architecture uses three data seeds and two initializations at noise 0.02. Six base fits are reused from E3; twelve fits are additional. The last column is the median saturation coefficient error $|\widehat\kappa-\kappa^\star|/\kappa^\star$ of the underlying PINN fits, not an error of SAEPS. Post-training diagnosis does not update $\widehat\kappa$.\end{minipage}
+\end{table}

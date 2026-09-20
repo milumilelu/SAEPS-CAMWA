@@ -1,0 +1,37 @@
+\begingroup
+\small\setlength{\tabcolsep}{4pt}
+\begin{longtable}{SSlSSS}
+\caption{Matched-damping costs for both archived centers. Medians of three repeats.}\label{tab:cost_all}\\
+\toprule
+{Seed} & {$\alpha$} & Method & {Solve (s)} & {Reported total (s)} & {Dense difference} \\
+\midrule\endfirsthead
+\toprule
+{Seed} & {$\alpha$} & Method & {Solve (s)} & {Reported total (s)} & {Dense difference} \\
+\midrule\endhead
+215 & 1e-08 & Dense & 7.34e-05 & 0.0002315 & {reference} \\
+215 & 1e-08 & CG & 10.63 & 10.687 & 2.993e-08 \\
+215 & 1e-08 & Scaled LSQR & 143.27 & 143.91 & 1.194e-12 \\
+215 & 1e-06 & Dense & 0.0001839 & 0.0005177 & {reference} \\
+215 & 1e-06 & CG & 3.9703 & 4.0324 & 2.333e-09 \\
+215 & 1e-06 & Scaled LSQR & 126.67 & 127.3 & 8.179e-14 \\
+215 & 0.0001 & Dense & 0.0001303 & 0.0003743 & {reference} \\
+215 & 0.0001 & CG & 1.432 & 1.4882 & 2.147e-10 \\
+215 & 0.0001 & Scaled LSQR & 105.79 & 106.43 & 1.099e-14 \\
+215 & 0.01 & Dense & 7.59e-05 & 0.0002528 & {reference} \\
+215 & 0.01 & CG & 0.6003 & 0.65189 & 2.638e-11 \\
+215 & 0.01 & Scaled LSQR & 98.294 & 98.891 & 6.111e-16 \\
+224 & 1e-08 & Dense & 0.0001116 & 0.0003255 & {reference} \\
+224 & 1e-08 & CG & 5.2314 & 5.2959 & 4.818e-08 \\
+224 & 1e-08 & Scaled LSQR & 134.63 & 135.24 & 1.984e-11 \\
+224 & 1e-06 & Dense & 7.19e-05 & 0.0001927 & {reference} \\
+224 & 1e-06 & CG & 1.9602 & 2.025 & 4.817e-09 \\
+224 & 1e-06 & Scaled LSQR & 116.19 & 116.8 & 4.002e-13 \\
+224 & 0.0001 & Dense & 7.67e-05 & 0.0002333 & {reference} \\
+224 & 0.0001 & CG & 0.92403 & 0.98969 & 9.696e-11 \\
+224 & 0.0001 & Scaled LSQR & 103.78 & 104.39 & 2.536e-15 \\
+224 & 0.01 & Dense & 0.0001242 & 0.0003526 & {reference} \\
+224 & 0.01 & CG & 0.53646 & 0.59976 & 4.37e-11 \\
+224 & 0.01 & Scaled LSQR & 98.484 & 99.073 & 4.645e-16 \\
+\bottomrule
+\end{longtable}
+\endgroup
