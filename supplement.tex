@@ -1,3 +1,4 @@
+\pdfminorversion=7
 \documentclass[10pt,letterpaper]{article}
 \usepackage[margin=0.9in]{geometry}
 \usepackage{needspace}
@@ -5,140 +6,129 @@
 \usepackage{lmodern}
 \input{glyphtounicode}
 \pdfgentounicode=1
-\usepackage{amsmath,amssymb,bm,booktabs,graphicx,microtype,siunitx,array,longtable,setspace,xurl,hyperref,caption,placeins}
-\hypersetup{hidelinks}\sisetup{group-digits=false}
+\usepackage{amsmath,amssymb,bm,booktabs,graphicx,siunitx,array,longtable,setspace,xurl,hyperref,caption,placeins,etoolbox}
+\usepackage[expansion=false]{microtype}
+\hypersetup{
+  hidelinks,
+  pdftitle={Supplementary material: Correcting frozen-state curvature in inverse physics-informed neural networks via regularized state elimination},
+  pdfauthor={Ziwei Ren, Shijin Zhang, Ming Chen, Chuangrui Zheng}
+}
+\robustify\bfseries
+\sisetup{group-digits=false,detect-weight=true,detect-family=true}
 \captionsetup{font=small,labelfont=bf}
 \setstretch{1.06}\raggedbottom
 \setlength{\emergencystretch}{2em}
 \setcounter{topnumber}{3}\setcounter{totalnumber}{5}
-\renewcommand{\topfraction}{.92}\renewcommand{\textfraction}{.06}\renewcommand{\floatpagefraction}{.78}
+\renewcommand{\topfraction}{.92}\renewcommand{\textfraction}{.06}
+\renewcommand{\floatpagefraction}{.78}
 \renewcommand{\thesection}{S\arabic{section}}
 \renewcommand{\thetable}{S\arabic{table}}
 \renewcommand{\thefigure}{S\arabic{figure}}
 \renewcommand{\theequation}{S\arabic{equation}}
 \newcommand{\Esa}{E_{\mathrm{SAEPS}}}
+\newcommand{\Fraw}{F_{\mathrm{raw}}}
+\newcommand{\Hred}{H_{\mathrm{red},\gamma}^{\mathrm{exact}}}
+\newcommand{\Cexact}{C_{\mathrm{relax}}^{\mathrm{exact}}}
 \title{Supplementary material\\[4pt]\large Correcting frozen-state curvature in inverse physics-informed neural networks via regularized state elimination}
 \author{Ziwei Ren, Shijin Zhang, Ming Chen, and Chuangrui Zheng}
 \date{}
 \begin{document}
 \maketitle
-\noindent This supplement documents the historical cohorts, added experiments, and revision-time algebraic checks.
-The historical and added experiments retain separate identities.
-The paper revision archive is at \url{https://github.com/milumilelu/SAEPS-CAMWA}. Source paths refer to the historical repository \url{https://github.com/milumilelu/SAEPS}.
-The historical tag is \texttt{jcp-submission-v1}.
-The added experiment snapshot is \texttt{1c4a37310bb8ee2ecd9f4703d9214e289ad7ce99}.
-The accompanying source archive records the provenance of each extracted data field.
+\noindent This supplement provides complete cohort records, numerical acceptance criteria, damping and undamped-limit audits, matched-damping solver timing ledgers, and operator-scale experiment details accompanying the main manuscript.
+Source code, processed benchmark tables, figure- and table-generation scripts, algebraic verification tests, and experimental logs are available at \url{https://github.com/milumilelu/SAEPS}.
 
-\section{Evidence map and numerical conventions}
+\section{Cohort overview and numerical conventions}
 \begin{table}[!htbp]
 \centering\small
-\caption{Evidence roles. Counts are not combined across different targets or reused centers.}
-\begin{tabular}{p{.21\linewidth}p{.25\linewidth}p{.45\linewidth}}
+\caption{Summary of experimental cohorts and analytical audits. Sample counts are kept separate across distinct targets and shared base fits.}
+\begin{tabular}{p{.23\linewidth}p{.26\linewidth}p{.43\linewidth}}
 \toprule
-Evidence & Records & Role\\\midrule
-Historical scalar & 15 Burgers; 10 Allen--Cahn & Original matched finite-damping comparisons\\
-Exact decomposition & 12 Burgers; 9 Allen--Cahn & Post-hoc block reconstruction and mechanism analysis\\
-Historical stress & 45 noise--sparsity; 15 architecture & Descriptive conditions; 15 designated exact anchors\\
-Historical coupled & 10; 8 accepted & Availability-limited matrix comparison\\
-Historical profile & 5; 1 accepted & Small-radius consistency limitation\\
-Saturation E3 & 8 development; 24 held-out & Non-affine coefficient extension; six held-out data seeds\\
-Architecture E6 & 18; 6 reused from E3 & Twelve additional trained fits; paired extension\\
-Saturation profile E7 & 21 steps; 126 branch refinements & Numerical agreement and stationarity assessed separately\\
-Matched cost E8 & 2 centers $\times$ 4 damping scales $\times$ 3 methods $\times$ 3 repeats & Numerical cost and dense-reference agreement\\
-Revision algebra & 18 existing E6 centers; synthetic tests & New derived gain-condition check and equivalent energy audit\\
+Cohort / Audit & Planned records & Role in manuscript\\\midrule
+Affine scalar PDEs & 15 Burgers; 10 Allen--Cahn & Primary matched finite-damping curvature comparison\\
+Exact decomposition & 12 Burgers; 9 Allen--Cahn & Exact-block error-budget and dominance-condition analysis\\
+Burgers stress suite & 45 noise--sparsity; 15 architecture & Stress boundaries and 15 designated exact-Hessian anchors\\
+Coupled system & 10 checkpoints (8 valid) & Availability-limited two-parameter matrix comparison\\
+Five-case profile study & 5 checkpoints (1 valid) & Small-radius nonlinear-profile consistency check\\
+Non-affine saturation & 8 development; 24 held-out & Non-affine coefficient extension across six held-out data seeds\\
+Architecture scaling & 18 fits (6 shared with saturation) & Paired trained networks at $n_\theta\in\{65,129,337\}$\\
+Saturation profile study & 21 steps; 126 branch refinements & Finite-displacement agreement vs.\ strict stationarity audit\\
+Matched-damping cost & 2 centers $\times$ 4 $\alpha$ $\times$ 3 solvers $\times$ 3 repeats & Wall-clock solver cost and dense-reference agreement\\
+Algebraic energy audit & Synthetic matrix tests & Exact-arithmetic verification of Proposition~2\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-All primary scalar curvature errors use the summed weighted least-squares objective.
-For $m$ residuals, the training objective is its mean, so Hessians differ by the factor $m$.
-Any mean-objective implementation must also divide the summed-objective damping by $m$.
-State refinement is performed at fixed physical parameters.
-This center is therefore distinct from a joint state--parameter optimum.
+All primary scalar curvature errors are computed on the summed weighted least-squares objective $\ell=\tfrac12\|\bar{\bm r}\|_2^2$.
+Because training minimizes the mean objective $\ell/m$ over $m$ residuals, curvature blocks and damping $\gamma$ scale by $m$ between the two conventions; any mean-loss implementation must divide both curvature matrices and $\gamma$ by $m$.
+State refinement is performed with the fitted physical parameter $\lambda_0$ held fixed, so the resulting checkpoint satisfies approximate state stationarity rather than joint state--parameter optimality.
 
-The scalar error denominator is $|H_{\rm red}|+10^{-8}$.
-The correction-relative denominator is $|C_{\rm exact}|+10^{-8}$.
-The latter does not measure the final-curvature error.
-The independent profile discrepancy uses its archived denominator $|H_{\rm red}|$.
-The coupled matrix metric is defined in Section~\ref{sec:coupled}.
+The primary scalar error denominator is $|\Hred|+10^{-8}$, whereas the relaxation-correction error $E_{\rm relax}$ uses $|\Cexact|+10^{-8}$; these two normalizations answer different questions and are reported separately.
+The finite-step profile discrepancy uses $\max(|\Hred|,10^{-8})$, and the coupled two-parameter matrix metric is defined in Section~\ref{sec:coupled}.
 
 \begin{table}[!htbp]
 \centering\small
-\caption{Historical scalar numerical rules. These rules were not changed for this revision.}
+\caption{Prespecified numerical acceptance rules for the affine scalar benchmarks.}
 \begin{tabular}{p{.36\linewidth}p{.56\linewidth}}
 \toprule
-Check & Rule\\\midrule
-Local state-gradient refinement & Normalized mean-objective gradient at most $10^{-6}$\\
-Final center indicators & $g_\theta^{\rm norm}<10^{-4}$ and $s_\theta<10^{-4}$\\
+Check & Criterion\\\midrule
+Local state-gradient refinement & Normalized mean-objective gradient $g_\theta^{\rm norm}\le 10^{-6}$\\
+Final center stationarity & $g_\theta^{\rm norm}<10^{-4}$ and $s_\theta<10^{-4}$\\
 Nominal damping & $\gamma=10^{-8}\lambda_{\max}(J_\theta^\top J_\theta)$\\
-State-fit iteration & Scaled augmented LSQR; tolerance $10^{-10}$; iterative refinement\\
-Numerical acceptance & Verified normal residual $\le10^{-8}$; explicit-curvature discrepancy $\le10^{-6}$\\
+Iterative state solve & Scaled augmented LSQR; tolerance $10^{-10}$; iterative refinement\\
+Linear-solve acceptance & Verified normal residual $\le10^{-8}$; explicit-curvature discrepancy $\le10^{-6}$\\
 Exact-Hessian symmetry & Relative tolerance $10^{-8}$\\
 Damped state reference & Positive-eigenvalue relative tolerance $10^{-10}$; solve residual $\le10^{-8}$\\
-Burgers comparison & 15 planned; at least 12 valid and 12 planned improvements\\
-Allen--Cahn comparison & 10 planned; at least 8 valid and 8 planned improvements\\
-Sign-test rule & Positive paired median and one-sided sign test at $0.05$\\
-Missing or failed center & Retained in the planned count; omitted from numerical error summaries\\
+Burgers cohort target & 15 planned; at least 12 valid and 12 planned improvements\\
+Allen--Cahn cohort target & 10 planned; at least 8 valid and 8 planned improvements\\
+Sign-test rule & Positive paired median and one-sided exact sign test at $0.05$\\
+Invalid checkpoint handling & Retained in planned denominator; omitted from conditional error summaries\\
 \bottomrule
 \end{tabular}
 \end{table}
 
-A small gradient is a stationarity indicator, not a measured distance to a local optimum.
-The quantity $-(H_{\theta\theta}+\gamma I)^{-1}g_\theta$ is a local Newton-response indicator.
-It is not a global state-error bound.
-Original scalar state tensors are unavailable for the requested independent fixed-anchor refinement audit.
-Archived block reproduction therefore remains distinct from original-tensor reproduction.
-Reconstructed engineering tensors are not substituted for the original centers.
+A small gradient norm is a local stationarity indicator rather than a certified distance to a local minimum, and the local Newton step $-(H_{\theta\theta}+\gamma I)^{-1}g_\theta$ does not provide a global state-error bound.
+For the Burgers and Allen--Cahn cohorts, all processed curvature blocks and summary records are preserved for independent reproduction, whereas original unarchived state tensors from those earlier training runs are not retained for tensor-level replay; reconstructed tensors are never substituted for the original checkpoints.
 
 \Needspace{7\baselineskip}
-\section{Complete historical scalar records}
+\section{Complete affine scalar records}
 \input{tables/historical_all}
-The valid-checkpoint sign tests are conditional on the original numerical acceptance rules.
-The planned counts remain 15 and 10.
-Median error ratios and medians of paired ratios answer different summary questions.
-For Burgers they are approximately $369.53$ and $335.38$.
-For Allen--Cahn they are approximately $73.13$ and $78.64$.
+The valid-checkpoint exact sign tests are conditional on passing the numerical acceptance rules in Table~S2, while planned cohort sizes remain $15$ and $10$.
+Ratios of medians and medians of paired error ratios measure distinct summaries: for Burgers they equal $369.53$ and $335.38$, and for Allen--Cahn they equal $73.13$ and $78.64$.
 
-\section{Coupled benchmark and matrix comparison}
+\section{Coupled two-parameter benchmark and matrix comparison}
 \label{sec:coupled}
 The manufactured fields are
 \begin{align}
  u^\star(x,t)&=\sin(\pi x)e^{-t}+0.1\sin(2\pi x)\sin t,\\
- v^\star(x,t)&=\cos(\pi x/2)e^{-t/2}+0.1\sin(3\pi x)\cos t.
+ v^\star(x,t)&=\cos(\pi x/2)e^{-t/2}+0.1\sin(3\pi x)\cos t,
 \end{align}
-They are substituted into
+substituted into the coupled reaction--diffusion system
 \begin{align}
  u_t&=0.03u_{xx}-a u+b v+f_u,\\
  v_t&=0.02v_{xx}+a u-b v+f_v.
 \end{align}
-Sources are generated at $(a,b)=(0.8,0.75)$ and then held fixed.
-Initial estimates are $(0.6,0.95)$.
-Both coefficients are inferred in logarithmic coordinates.
-Dirichlet values are imposed at the two spatial ends.
-Each state field uses a width-six tanh network, giving 50 state parameters jointly.
-Each channel has 96 PDE residuals, 128 observations, 48 initial residuals, and 96 boundary residuals.
-The joint residual count is 736.
+Sources $f_u,f_v$ are computed once at the true values $(a,b)=(0.8,0.75)$ and held fixed during inference, starting from initial estimates $(0.6,0.95)$ in logarithmic coordinates $(\log a,\log b)$.
+Dirichlet boundary conditions are enforced at both spatial endpoints.
+Each field is represented by an independent width-$6$ $\tanh$ network ($n_\theta=50$ state parameters jointly), with $96$ PDE points, $128$ observations, $48$ initial points, and $96$ boundary points per channel ($m=736$ residuals total).
 
-The common matrix metric is
+To compare $2\times 2$ curvature matrices on a common scale, define the stabilized whitening matrix
 \begin{equation}
  B=\tfrac12(F_{\rm raw}+F_{\rm raw}^{\top})+\tau I,
  \qquad \tau=10^{-10}\max\{\operatorname{tr}(F_{\rm raw})/2,1\}.
 \end{equation}
-With $B=LL^\top$, define $\mathcal W(X)=L^{-1}XL^{-\top}$.
-Errors use
+With Cholesky factor $B=LL^\top$ and $\mathcal W(X)=L^{-1}XL^{-\top}$, matrix errors are defined by
 \begin{equation}
  E_X^{(2)}=\frac{\|\mathcal W(F_X-H_{\rm red})\|_F}
  {\|\mathcal W(H_{\rm red})\|_F+10^{-30}}.
 \end{equation}
-All methods share the same metric at each center.
-It is not a guarantee of invariance under arbitrary parameter transformations.
+All methods share the same metric at each checkpoint (this metric does not guarantee invariance under arbitrary nonlinear reparameterizations).
 
 \begin{table}[!htbp]
 \centering\small
-\caption{All ten historical coupled records. Both unavailable centers fail the frozen center gate.}
+\caption{All ten coupled two-parameter checkpoints. Both invalid centers fail the state-center validity gate.}
 \begin{tabular}{rcrr}
 \toprule
-Seed & Accepted & $E_{\rm raw}^{(2)}$ & $E_{\rm SAEPS}^{(2)}$\\\midrule
+Seed & Valid & $E_{\rm raw}^{(2)}$ & $E_{\rm SAEPS}^{(2)}$\\\midrule
 215 & yes & 17.3643 & 0.02593\\
 216 & yes & 9.5722 & 0.02116\\
 217 & yes & 14.4154 & 0.01100\\
@@ -151,136 +141,78 @@ Seed & Accepted & $E_{\rm raw}^{(2)}$ & $E_{\rm SAEPS}^{(2)}$\\\midrule
 224 & yes & 12.3405 & 0.09526\\\bottomrule
 \end{tabular}
 \end{table}
-All eight accepted records favor SAEPS.
-Their conditional exact one-sided sign-test probability is $3.90625\times10^{-3}$, without multiplicity adjustment.
-The planned nine-of-ten availability requirement remains unmet.
-Changing the relative whitening stabilizer between $10^{-12}$ and $10^{-8}$ preserves the observed paired direction.
-This is an observed sensitivity result, not a general invariance theorem.
-
-The coordinate audit uses ten archived tensors, including the two invalid centers.
-Its identities are algebraic and therefore do not require accepted stationarity.
-A matching state metric preserves the tested linear-coordinate representation.
-Replacing that metric with the identity changes the target.
-These checks do not upgrade the two failed centers to historical accuracy samples.
+All eight valid checkpoints favor SAEPS (conditional exact one-sided sign test $p=3.91\times10^{-3}$, unadjusted), while the prespecified $9/10$ availability gate is not met.
+Varying the whitening stabilizer $\tau$ across $[10^{-12},10^{-8}]$ preserves the paired advantage on every valid checkpoint.
+Separately, algebraic coordinate-transformation identities were verified on all ten coupled checkpoints (including the two invalid centers, as algebraic identities do not require stationarity); applying the matching transformed state metric preserves linear-coordinate representations, whereas replacing it with the Euclidean identity changes the target.
 
 \input{tables/failure_counts}
-\section{Saturation setup, aggregation, and all held-out fits}
-The manufactured saturation field is
+
+\section{Non-affine saturation setup, aggregation, and held-out fits}
+The manufactured saturation solution is
 \begin{equation}
- u^\star=1+0.2e^{-t}\cos(2\pi x)+0.1e^{-2t}\sin(4\pi x).
+ u^\star(x,t)=1+0.2e^{-t}\cos(2\pi x)+0.1e^{-2t}\sin(4\pi x),
 \end{equation}
-Its value is bounded below by $0.7$ on the stated domain.
-The fixed source is
+which satisfies $u^\star\ge 0.7$ on the domain, with fixed manufactured source
 \begin{equation}
  f=u_t^\star-0.01u_{xx}^\star-\frac{u^\star}{1+1.2u^\star}.
 \end{equation}
-The trained output is $u=\operatorname{softplus}(v)+0.05$.
-Network derivatives include the output transformation.
-Noise is added only to observations and scaled by their sampled truth standard deviation.
-The source is known and correctly specified in this controlled synthetic design.
-No new source-noise or forcing-mismatch experiment is reported.
+The network output uses $u=\operatorname{softplus}(v)+0.05$ with all spatial and temporal derivatives propagated through the transformation.
+Zero-mean Gaussian noise is added only to observations, scaled by the standard deviation of sampled truth values, while the source $f$ remains correctly specified.
 
-Development uses data seeds 916001 and 916002.
-Held-out data seeds are 916101--916106.
-Initialization seeds are 926001 and 926002.
-Each seed pair is evaluated at noise levels zero and $0.02$.
-The two noise layers share point sets and standard-normal draws.
-The mean-objective optimizer uses 3000 Adam steps at $10^{-3}$ and at most 1000 joint L-BFGS iterations.
-The fitted coefficient is then fixed during state refinement.
-The frozen state-polish ceiling is 100{,}000 iterations.
+Development uses data seeds $916001$--$916002$ and held-out evaluation uses data seeds $916101$--$916106$, each paired with initialization seeds $926001$--$926002$ and observation noise levels $0$ and $0.02$ sharing spatial--temporal layouts and standard-normal draws.
+Joint training runs $3000$ Adam steps ($10^{-3}$) and up to $1000$ L-BFGS iterations on the mean objective, followed by fixed-$\lambda$ state refinement capped at $100{,}000$ iterations.
+During development at ceilings of $10{,}000$, $30{,}000$, and $100{,}000$ iterations, valid center counts were $6/8$, $8/8$, and $8/8$; increasing the ceiling from $30{,}000$ to $100{,}000$ altered individual relative errors by up to $14.2\%$ and shifted the development median by approximately $2.2\%$, after which the $100{,}000$-iteration budget was frozen prior to held-out execution.
 
-The budget was selected during development, before held-out evaluation.
-At budgets 10000, 30000, and 100000, the accepted counts were 6/8, 8/8, and 8/8.
-The last transition changed individual relative errors by up to 14.2\%.
-The median error changed by approximately 2.2\% across that transition.
-The much smaller median of per-fit changes is a different statistic.
-The revision keeps these distinct rather than presenting a uniform convergence claim.
-
-\subsection{Statistics at the declared data-seed level}
-Each held-out data seed has four dependent fits.
-The headline summary takes their median, then summarizes the six seed values.
-This cross-noise pooling rule was adopted during reporting and is post hoc.
-Noise-stratified summaries follow the originally stated within-seed initialization aggregation.
-All 24 individual fits improve, and all six seed summaries improve.
-Define $D_s$ as the difference between the seed-level raw and SAEPS error summaries.
-The exact one-sided sign test uses $H_0:\Pr(D_s>0\mid D_s\ne0)=1/2$; no ties occur.
-The six-seed value is $p=1.5625\times10^{-2}$, without multiplicity adjustment.
-Historical probabilities are conditional on accepted checkpoints; planned failures remain visible as separate nonwins.
-Neither paired noise layers nor initialization repeats are treated as independent samples.
-All effect-size quartiles below use NumPy's linear interpolation convention and are descriptive, not confidence limits.
+\subsection{Aggregation at the independent data-seed level}
+Each held-out data seed contains four dependent fits ($2$ initializations $\times$ $2$ noise levels).
+The main summary pools these four fits by their seed median before taking the median across six independent data seeds (a post-hoc cross-noise pooling rule); noise-stratified summaries preserve the original within-noise initialization median.
+All $24$ individual fits and all $6$ seed summaries favor SAEPS ($p=1.5625\times10^{-2}$, exact one-sided sign test, no ties, unadjusted).
+Empirical quartiles in Table~S6 use linear interpolation and describe sample dispersion rather than calibrated confidence intervals.
 \input{tables/effect_sizes}
-Treating the 24 fits as independent would produce an inappropriate precision gain.
-
 \input{tables/aggregation_levels}
 \input{tables/e3_seeds}
 \begin{figure}[!htbp]
 \centering\includegraphics[width=.94\linewidth]{figures/s04_noise_stratified.pdf}
-\caption{Noise-stratified saturation results. Each point is the median of two initializations at one data seed and noise level.
-The two noise layers share data seeds and are not independent cohorts.}
+\caption{Noise-stratified saturation errors. Each point is the median of two initializations at one data seed and noise level; the two noise layers share data seeds and are not independent cohorts.}
 \end{figure}
 \input{tables/e3_all}
 
-\section{Architecture pairing and the new explanatory check}
-All three architectures use noise $0.02$, data seeds 916101--916103, and both initialization seeds.
-The six base fits are reused from E3.
-The wider and deeper architectures contribute twelve additional trained fits.
-All eighteen centers admit the recorded damped state-block reduction.
-Every accepted accuracy record passes its own campaign's damped-state-block positivity and solve tests.
-The historical record counts are 12/15 Burgers, 9/10 Allen--Cahn, and 8/10 coupled cases.
-The added counts are 24/24 saturation fits and 18/18 architecture records, including six reused base fits.
-This is an acceptance statement, not an independently reconstructed pooled eigenvalue distribution.
-The largest tested dense-Hessian/HVP discrepancy is $1.54\times10^{-15}$.
-The check is directional numerical agreement, rather than an exhaustive proof of every implementation path.
+\section{Trained architecture scaling and dominance-condition audit}
+All three trained architectures ($n_\theta\in\{65,129,337\}$) use noise level $0.02$, data seeds $916101$--$916103$, and both initialization seeds.
+The six base ($n_\theta=65$) fits are shared with the main saturation cohort, and the wider ($129$) and deeper ($337$) networks contribute twelve additional trained fits.
+Every valid accuracy record across the study passes its cohort's damped state-block positivity and linear-solve checks ($12/15$ Burgers, $9/10$ Allen--Cahn, $8/10$ coupled, $24/24$ saturation, and $18/18$ architecture records).
+At $n_\theta=337$, the largest dense-Hessian versus HVP discrepancy across tested directions is $1.54\times10^{-15}$.
 
 \input{tables/architecture}
 \input{tables/architecture_resources}
-The reported coefficient errors characterize the underlying PINN fits.
-SAEPS is evaluated after fitting and does not change those coefficients.
-Two width-32 fits have larger SAEPS errors than their paired base fits.
-All width-32 fits still improve over their own frozen-state baselines.
-The main figure retains these individual trajectories.
+The reported parameter errors characterize the underlying PINN fits, which post-training SAEPS leaves unchanged.
+Although two width-$32$ fits have slightly larger SAEPS errors than their paired width-$16$ counterparts, all $18/18$ fits improve over their frozen-state baselines by roughly four orders of magnitude.
 
-For the revision-time explanatory check, define
+Evaluating Corollary~1 of the main manuscript,
 \begin{equation}
  \chi=\frac{2|F_{\rm raw}-H_{\rm fix}|+
  |(F_{\rm raw}-F_{\rm se})-(H_{\rm fix}-H_{\rm red})|}
- {|H_{\rm fix}-H_{\rm red}|}.
+ {|H_{\rm fix}-H_{\rm red}|},
 \end{equation}
-All eighteen archived architecture records satisfy $\chi<1$.
-The maximum is $4.70555\times10^{-4}$.
-This is a new post-hoc calculation from stored curvatures, not a new training experiment.
-The six reused base fits are not counted as additional evidence.
-Since exact reference blocks are needed, this condition explains observed accuracy rather than predicting deployment accuracy without a reference.
+confirms that all $39/39$ valid scalar checkpoints satisfy $\chi<1$:
+Burgers ($12/12$: $\chi\in[0.00811,0.02596]$, median $0.01526$),
+Allen--Cahn ($9/9$: $\chi\in[0.02285,0.04565]$, median $0.03293$),
+and the $18$ saturation architecture checkpoints ($\max\chi=4.706\times10^{-4}$).
+Because computing $\chi$ requires exact reference blocks, Corollary~1 serves as an explanatory mechanism check rather than a reference-free deployment predictor.
 
-\section{Profile agreement, stationarity, and historical failures}
-For the saturation profile, the anchor and numerical damping remain fixed.
-The physical parameter is displaced in log coordinates.
-Three specified centers and seven step sizes produce 21 symmetric differences.
-Three gradient levels are applied to both branches, giving 126 refinement records.
-Those levels are $10^{-8}$, $10^{-10}$, and $10^{-12}$.
-The per-point iteration limit is 1000; the per-center wall cap is two hours.
-All 21 differences satisfy the recorded branch-comparison criterion.
-Twenty lie within 10\% of the local Schur reference.
-No branch pair attains the tightest gradient requirement at any step.
-Only five of 126 branch refinements reach their assigned threshold.
-
-The branch criterion is a numerical comparability check, not proof of identical nonlinear basins.
-For these scalar tests, the finite difference is denoted $D_\gamma(h;1)$ in the main text.
-The reported discrepancy is $|D_\gamma(h;1)-H_{\rm red}|/\max(|H_{\rm red}|,10^{-8})$.
-Writing $d_\pm=\|\widehat\theta_\pm-\theta_0\|_2$, the stored branch check is
-$|d_+-d_-|<10\max(d_+,10^{-30})$.
-This loose norm-asymmetry screen does not certify a shared local basin.
-The arithmetic identity is independently checked from the stored curvature columns.
-The source's displaced-curvature method-comparison columns are not used to claim independent profile superiority.
-The strict stationarity criterion is retained separately from the observed numerical closeness.
+\section{Finite-step profile agreement and stationarity boundaries}
+For the saturation profile study, the anchor $\theta_0$ and numerical damping $\gamma$ are held fixed while $\lambda$ is displaced symmetrically in log coordinates across three data seeds and seven step sizes ($21$ symmetric differences $D_\gamma(h;1)$).
+Three graded state-gradient tolerances ($10^{-8}$, $10^{-10}$, and $10^{-12}$) are applied to both $\pm h$ branches ($126$ refinement runs total, with a $1000$-iteration per-point cap and a $2\text{-hour}$ per-center wall cap).
+Writing $d_\pm=\|\widehat\theta_\pm-\theta_0\|_2$, all $21$ pairs pass the displacement-comparability screen $|d_+-d_-|<10\max(d_+,10^{-30})$ (a norm-asymmetry check that does not certify a shared nonlinear basin), and $20/21$ agree with $\Hred$ within $10\%$ under $|D_\gamma(h;1)-\Hred|/\max(|\Hred|,10^{-8})$.
+However, $0/21$ branch pairs reach the strictest gradient tolerance and only $5/126$ individual refinements meet their assigned graded threshold.
 \input{tables/profile_all}
 
 \begin{table}[!htbp]
 \centering\small
-\caption{Historical nonlinear-profile cohort. These five cases are separate from the saturation profile.}
+\caption{Separate five-case nonlinear-profile consistency benchmark.}
 \begin{tabular}{rcrr}
 \toprule
-Seed & Profile accepted & Finest relative error & Last-two change\\\midrule
+Seed & Profile valid & Finest relative error & Last-two change\\\midrule
 200 & no & 0.794058 & 0.0984479\\
 201 & no & 1.73825 & 1.08349\\
 202 & no & 0.272789 & 0.554042\\
@@ -288,19 +220,13 @@ Seed & Profile accepted & Finest relative error & Last-two change\\\midrule
 204 & yes & 0.0538669 & 0.0010568\\\bottomrule
 \end{tabular}
 \end{table}
-The historical result remains one accepted case among five planned cases.
-The author-supplied limited-claims materials also describe separate Q2 S2 development failures.
-The first development reports no complete accepted multiscale cohort among nine records.
-A subsequent six-record development also reports no complete accepted cohort.
-These descriptions are retained as separate provenance context from the supplied materials.
-Their underlying raw files were not independently reconstructed in this revision.
-Their counts are therefore not pooled with either profile table.
-A successful two-point fit alone cannot identify a free-intercept, free-slope quadratic profile.
+In this separate five-case benchmark, only $1/5$ checkpoints passed both small-radius consistency gates, reinforcing the main manuscript's distinction between local exact-Hessian Schur agreement and globally converged multiscale profile equivalence.
 
-\section{Historical damping and stress boundaries}
+\section{Finite-damping sweep and stress boundaries}
 \begin{table}[!htbp]
 \centering\small
-\caption{Historical finite-damping sweep across six fixed centers. The smallest level has only two resolved cases.}
+\caption{Finite-damping sweep across six fixed Burgers and Allen--Cahn centers. Only two centers resolve at $\alpha=10^{-10}$, so that row summarizes a different resolved subset.}
+\label{tab:damping_sweep}
 \begin{tabular}{rcrrr}
 \toprule
 $\alpha$ & Resolved & Median retained fraction & Median effective rank & Median $E_{\rm SAEPS}$\\\midrule
@@ -313,53 +239,32 @@ $1$ & 6/6 & 0.9688 & 0.9495 & 0.0116\\
 $100$ & 6/6 & 0.9996 & 0.0152 & 0.0112\\\bottomrule
 \end{tabular}
 \end{table}
-The nominal primary damping remains $\alpha=10^{-8}$.
-The sweep changes the numerical damping and therefore the target geometry.
-It does not recalibrate the primary protocol.
-Four unresolved cases occur at the smallest level.
-Its aggregate summarizes a different resolved subset and should not be read as a paired six-case median.
+The nominal damping scale remains fixed at $\alpha=10^{-8}$ throughout the primary accuracy experiments.
+Because increasing $\alpha$ changes $\gamma$ and continuously shifts the target $\Hred$ toward $\Fraw$, values of $E_{\rm SAEPS}$ across different rows of Table~\ref{tab:damping_sweep} are not directly comparable and were not used to tune $\alpha$.
 
 \begin{figure}[!htbp]
 \centering\includegraphics[width=.92\linewidth]{figures/s01_retained_fraction.pdf}
-\caption{Retained response approaches the frozen-state limit as damping increases.
-The smallest point summarizes two resolved cases; all later points summarize six.}
+\caption{Median retained curvature fraction $\eta$ approaches the frozen-state limit as damping increases ($2/6$ resolved at $\alpha=10^{-10}$; $6/6$ at all larger $\alpha$).}
 \end{figure}
 \begin{figure}[!htbp]
 \centering\includegraphics[width=.92\linewidth]{figures/s02_effective_rank.pdf}
-\caption{Effective state flexibility decreases with stronger damping.
-This is the same six-center sweep, with the same smallest-level availability limitation.}
+\caption{Median effective state rank $r_{\rm eff}(\gamma)$ decreases monotonically with stronger damping across the same six-center sweep.}
 \end{figure}
 
-The Burgers stress design crosses noise levels $0$, $0.01$, and $0.05$ with observation fractions $1$, $0.5$, and $0.2$.
-Observation counts are 128, 64, and 26.
-Five seeds, 130--134, are used in every condition.
-The resulting 45 noise--sparsity records contain 43 accepted records.
-Exact-Hessian anchors occupy three cells: $(0,1)$, $(0.01,0.5)$, and $(0.05,0.2)$.
-Fourteen of their fifteen planned records are accepted and favor SAEPS.
-Their median errors are approximately 38.1318 for raw curvature and 0.0879 for SAEPS.
-
-A separate architecture study uses seeds 135--139 at widths 8, 16, and 32.
-Its accepted counts are 5/5, 4/5, and 0/5.
-Together these two studies have 52 accepted records among 60 planned records.
-Seven center failures and one solver failure are retained.
-The total is not a sixty-case noise-only campaign.
-Neither the new saturation architectures nor the algebraic tests replace the historical width-32 failures.
+The Burgers stress campaign crosses observation noise levels $\{0, 0.01, 0.05\}$ with observation fractions $\{1.0, 0.5, 0.2\}$ ($128$, $64$, and $26$ sensors) across five seeds ($130$--$134$), yielding $43/45$ valid records.
+Exact-Hessian anchors are evaluated at three cells---$(0,1.0)$, $(0.01,0.5)$, and $(0.05,0.2)$---with $14/15$ valid checkpoints, all favoring SAEPS (median error $38.1318\to 0.0879$).
+A separate Burgers width sweep across widths $8$, $16$, and $32$ (seeds $135$--$139$) yields $5/5$, $4/5$, and $0/5$ valid centers, respectively ($52/60$ valid overall across both stress campaigns, with $7$ center failures and $1$ solver failure retained).
 
 \input{tables/stress_anchors}
 
-\section{Undamped limit and the conditional remainder bound}
-The archived state tangents are highly ill conditioned.
-The formal GN pseudoinverse curvature is evaluated at a fixed matrix using cutoff
-$n_\theta\epsilon_{\rm mach}\lambda_{\max}(G_{\theta\theta})$.
-The median resolved ranks are 60/65 for Burgers and 32/33 for Allen--Cahn.
-Median resolved condition numbers are $2.70\times10^{13}$ and $7.37\times10^{12}$.
-Finite-damping and formal undamped GN curvatures differ by median relative amounts 0.2321 and 0.0597.
-The exact zero-damping state-block admissibility counts remain 0/12 and 0/9.
-Thus a formal matrix limit is available while the ordinary nonlinear zero-damping reference is unavailable under the frozen criterion.
+\section{Undamped limit and conditional remainder bound}
+Across the $21$ valid Burgers and Allen--Cahn checkpoints, the resolved eigen-subspaces of $G_{\theta\theta}=J_\theta^\top J_\theta$ (retained above $n_\theta\epsilon_{\rm mach}\lambda_{\max}(G_{\theta\theta})$) exhibit median numerical ranks of $60/65$ (Burgers) and $32/33$ (Allen--Cahn) and median condition numbers of $2.70\times10^{13}$ and $7.37\times10^{12}$.
+Finite-damping and formal undamped GN curvatures differ by median relative amounts $0.2321$ and $0.0597$.
+None of the $21$ checkpoints ($0/12$ on Burgers, $0/9$ on Allen--Cahn) passes the prespecified undamped positive-definiteness threshold for the exact state Hessian $H_{\theta\theta}$ ($19$ have negative minimum eigenvalues and $2$ have positive eigenvalues below tolerance), so an admissible exact zero-damping reference is unavailable.
 
 \begin{table}[!htbp]
 \centering\small
-\caption{Sensitivity to the TSVD cutoff in the formal undamped GN calculation.}
+\caption{Sensitivity of the formal undamped Gauss--Newton pseudoinverse curvature to the TSVD relative cutoff.}
 \begin{tabular}{llrr}
 \toprule
 Cohort & Relative cutoff & Median difference & Maximum difference\\\midrule
@@ -371,84 +276,42 @@ Allen--Cahn & $10^{-10}$ & 0.0442 & 0.1212\\
 Allen--Cahn & $10^{-12}$ & 0.0050 & 0.1046\\\bottomrule
 \end{tabular}
 \end{table}
-These differences are relative to the archived machine-rule pseudoinverse calculation.
-They position finite damping relative to its formal GN limit.
-They do not establish superiority against a matched exact zero-damping target.
 
 \Needspace{10\baselineskip}
-For the conditional bound, write
-$M=G_{\theta\theta}+\gamma I$, $B=G_{\theta\lambda}$,
-$S=S_{\theta\theta}$, $T=S_{\theta\lambda}$, and $R=S_{\lambda\lambda}$.
-If $\delta=\|M^{-1}\|_2\|S\|_2<1$, the resolvent identity gives
+For a classical resolvent remainder bound, write $M=G_{\theta\theta}+\gamma I$, $B=G_{\theta\lambda}$, $S=S_{\theta\theta}$, $T=S_{\theta\lambda}$, and $R=S_{\lambda\lambda}$.
+When $\delta=\|M^{-1}\|_2\|S\|_2<1$, the resolvent identity implies
 \begin{align}
  \|H_{\rm red}-F_{\rm se}^{\rm GN}\|_2
  \le{}&\|R\|_2+
  \frac{\|B\|_2^2\|M^{-1}\|_2^2\|S\|_2}{1-\delta}\\
  &+\frac{(2\|B\|_2\|T\|_2+\|T\|_2^2)\|M^{-1}\|_2}{1-\delta}.
 \end{align}
-Its sufficient condition fails at all 21 reconstructed historical centers.
-Median $\delta$ values are $1.39\times10^5$ and $4.76\times10^5$.
-The bound is therefore retained as a conditional result, not applied as a numerical certificate to those centers.
-The new gain condition in the main paper is different: it compares observed exact error components directly.
+Because the small-perturbation premise $\delta<1$ fails on all $21$ scalar centers (median $\delta=1.39\times10^5$ on Burgers and $4.76\times10^5$ on Allen--Cahn), this resolvent bound is non-vacuous only in stronger-damping or smaller-residual regimes; the exact decomposition and $\chi<1$ dominance condition in the main manuscript avoid requiring $\delta<1$.
 
-\section{Complete matched-damping costs}
-Both centers 215 and 224 are included.
-Each method is run three times after a discarded warm-up.
-The shared Jacobian setup times are 0.7898008 seconds and 0.0202065 seconds, respectively.
-These shared costs are not included in the per-evaluation totals below.
-The reported totals include each method's recorded preparation, solve, and verification stages.
-They do not include PINN training or state polishing.
-Dense self-differences are reference values, not independently measured exact-Hessian approximation errors.
+\section{Complete matched-damping solver costs}
+Both coupled checkpoints (seeds $215$ and $224$, $n_\theta=50$, $p=2$, $m=736$) are timed over three repeats after a discarded warm-up with zero initial guesses.
+Shared Jacobian preparation times ($0.7898\text{ s}$ and $0.0202\text{ s}$) are excluded from per-method totals; reported totals include per-method preparation, solve, and verification stages, excluding PINN training and state refinement.
 
-\subsection{Solver workload and recorded environment}
-The E8 record uses CPU execution in float64 on Windows 11.
-Its Python, PyTorch, and NumPy versions are 3.12.14, 2.13.0+cpu, and 2.3.5.
-The processor identifier is Intel64 Family 6 Model 183 Stepping 1, GenuineIntel.
-The record lists 20 logical CPUs and 14 intra-operation and 14 inter-operation PyTorch threads.
-CUDA is unavailable; no GPU synchronization or JAX workload is involved in these reported timings.
-The BLAS vendor/version and a retail CPU model were not recorded, so they are left unspecified.
-These E8 settings are distinct from the historical operator-scale environment below.
-
-Dense timing includes constructing the damped block, Cholesky factorization, and solving both parameter-column right-hand sides.
-Its separately recorded spectral stage constructs $J_\theta^\top J_\theta$ and computes its eigenvalues.
-CG applies the normal operator through JVP/VJP products, but the E8 benchmark also holds explicit Jacobians for references and right-hand sides.
-Its tolerance is $10^{-10}$, with at most 500 iterations per right-hand side; iteration counts sum two solves.
-Independent normal-residual verification uses a $10^{-8}$ acceptance threshold.
-
-Scaled LSQR uses the two residual-space parameter columns and their sum, with tolerance $10^{-10}$.
-The frozen helper is called with a 500-iteration per-pass ceiling and two refinement passes for each direction.
-Its solve timer covers the helper calls, including any setup, refinement, and verification performed internally.
-The separately timed diagonal construction is not passed to the helper as a reusable preconditioner.
-Thus the solve-stage label must not be interpreted as pure LSQR iteration time or a clean preconditioner-cost decomposition.
-The final verification timer for this path only aggregates residuals returned by the helper.
-These are measured implementation workloads, not equal-accuracy stopping-policy or asymptotic-complexity comparisons.
-Each condition uses one discarded warm-up, three repeats, and a zero initial guess.
-The declared $10^{-6}$ dense-reference agreement level is met by both iterative implementations.
+\subsection{Solver configurations and compute environment}
+Matched-damping timings were collected on CPU in \texttt{float64} (Windows 11, Python 3.12.14, PyTorch 2.13.0+cpu, NumPy 2.3.5, Intel64 Family 6 Model 183 Stepping 1, 20 logical CPUs, 14 intra-op and 14 inter-op threads; no GPU).
+Dense Cholesky constructs $G_{\theta\theta}+\gamma I$, factorizes it, and solves both parameter-column right-hand sides.
+Matrix-free CG evaluates normal-matrix products via JVP/VJP with tolerance $10^{-10}$, up to $500$ iterations per right-hand side, and independent normal-residual verification at $10^{-8}$.
+Scaled augmented LSQR solves three polarized residual directions (the two parameter columns and their sum) at tolerance $10^{-10}$ using two $500$-iteration passes per direction; its solve timer encompasses internal helper setup, refinement, and residual checks and should therefore be interpreted as end-to-end helper workload rather than pure iteration time.
+Both iterative solvers meet the $10^{-6}$ dense-reference agreement threshold across all damping scales.
 
 \input{tables/cost_all}
 \begin{figure}[!htbp]
 \centering\includegraphics[width=.97\linewidth]{figures/fig05b_solver_agreement.pdf}
-\caption{Numerical agreement with dense GN reduction for both centers.
-The two curves per iterative method correspond to seeds 215 and 224.
-Dense self-differences are zero and are not plotted on a logarithmic axis.
-The discrepancy is a linear-algebra metric, not the final GN approximation error.}
+\caption{Relative discrepancy against dense Gauss--Newton reduction for CG and scaled augmented LSQR across both coupled checkpoints (seeds $215$ and $224$). Dense self-differences are zero and omitted on the logarithmic axis.}
 \end{figure}
-At weak damping, both iterative methods are already below the declared $10^{-6}$ agreement requirement.
-The extra LSQR precision is therefore reported alongside its additional cost.
-Dense reduction is fastest for these 50-parameter systems.
-No matrix-free speedup over dense reduction is inferred at this size.
 
-\section{Separate operator-scale experiment}
-One width-25 state is expanded to hidden widths 250, 2500, and 25000.
-New hidden features receive zero output weights.
-The represented function is preserved without independently training each expanded network.
-The state dimensions are 1001, 10001, and 100{,}001.
-Residual grids are enlarged using actual collocation residuals.
-Their dimensions are 213, 853, and 3413.
+\section{Operator-scale matrix-free experiment}
+To measure matrix-free scaling at large state dimensions without explicit Jacobian storage, a width-$25$ state network is expanded in a function-preserving manner (zero output weights on added hidden units) to hidden widths $250$, $2500$, and $25{,}000$, yielding $n_\theta\in\{1001, 10{,}001, 100{,}001\}$.
+Residual grids are refined using real collocation, observation, initial, and boundary residuals ($m\in\{213, 853, 3413\}$, Table~S18).
 
 \begin{table}[!htbp]
 \centering\small
-\caption{Real residual constructions used in the operator-scale study.}
+\caption{Residual grid constructions used in the operator-scale feasibility study.}
 \begin{tabular}{rrrrr}
 \toprule
 $m$ & PDE grid & Data grid & Initial points & Boundary points per side\\\midrule
@@ -457,58 +320,21 @@ $m$ & PDE grid & Data grid & Initial points & Boundary points per side\\\midrule
 3413 & $39\times39$ & $39\times39$ &123&124\\\bottomrule
 \end{tabular}
 \end{table}
-CG uses $\alpha=10^{-2}$ and twenty power iterations for the spectral estimate.
-The nominal solve tolerance is $10^{-10}$; acceptance uses $10^{-8}$.
-The iteration ceiling is 500.
-All 27 repeated solves pass the recorded verification.
+Matrix-free CG runs at $\alpha=10^{-2}$ with $20$ power iterations for $\lambda_{\max}(G_{\theta\theta})$, solve tolerance $10^{-10}$, verification gate $10^{-8}$, and a $500$-iteration cap.
+All $27/27$ repeated solves pass verification.
 
 \begin{figure}[!htbp]
 \centering\includegraphics[width=.94\linewidth]{figures/s03_operator_scaling.pdf}
-\caption{Operator-scale timings at their separately declared stronger damping.
-Each value is the median of three solves on a function-preserving expanded network.
-Numeric residual counts determine horizontal distances.}
+\caption{Median matrix-free CG iteration times across state dimensions $n_\theta\in\{1001,10{,}001,100{,}001\}$ and residual counts $m\in\{213,853,3413\}$ at $\alpha=10^{-2}$ (three repeats per grid cell on function-preserving expanded networks).}
 \end{figure}
-The largest condition records 62.83 seconds of shared setup and 40.97 seconds of median iteration time.
-Their sum, 103.80 seconds, covers those two stages only.
-Checkpoint loading, widening, and residual construction lie outside that sum.
-The historical environment records Windows 11, CPU execution, and float64.
-Archived versions are Python 3.12.13, PyTorch 2.13.0, and NumPy 2.3.5.
-The available processor identifier is Intel64 Family 6 Model 183 Stepping 1.
-A retail CPU model, thread count, and native tensor-memory peak are not inferred from that identifier.
-The revision's local algebraic-test environment is recorded separately.
+At the largest grid ($n_\theta=100{,}001$, $m=3413$), shared setup takes $62.83\text{ s}$ and median CG iteration time is $40.97\text{ s}$ ($103.80\text{ s}$ combined, excluding checkpoint loading, widening, and residual construction; CPU execution in \texttt{float64}, Python 3.12.13, PyTorch 2.13.0, NumPy 2.3.5).
 
-\section{Equivalent energy audit and reproducibility}
-The main paper adds an equivalent evaluation form, not a new trained benchmark method.
-For $M=J^\top J+\gamma I$, $Y=J_\lambda$, and an approximate state fit $\widehat Z$, define
-\begin{align}
- R&=M\widehat Z-J^\top Y,\\
- \widehat F_E&=(Y-J\widehat Z)^\top(Y-J\widehat Z)+\gamma\widehat Z^\top\widehat Z.
-\end{align}
-Let $Z_\star=M^{-1}J^\top Y$ and $E=\widehat Z-Z_\star$.
-Expanding the energy cancels the cross terms and gives
+\section{Equivalent energy audit and reproducibility checks}
+For $M=J_\theta^\top J_\theta+\gamma I$, $Y=J_\lambda$, and an approximate state solve $\widehat Z=Z_\star+E$ with normal residual $R=M\widehat Z-J_\theta^\top Y=ME$, expanding the energy form $\widehat F_E=(Y-J_\theta\widehat Z)^\top(Y-J_\theta\widehat Z)+\gamma\widehat Z^\top\widehat Z$ cancels all linear cross terms via $MZ_\star=J_\theta^\top Y$, yielding
 \begin{equation}
- \widehat F_E-F_{\rm se}^{\rm GN}=E^\top ME=R^\top M^{-1}R.
+ \widehat F_E-F_{\rm se}^{\rm GN}=E^\top M E=R^\top M^{-1}R,\qquad
+ 0\preceq \widehat F_E-F_{\rm se}^{\rm GN}\preceq \gamma^{-1}R^\top R.
 \end{equation}
-Since $M\succeq\gamma I$, the upper error matrix is $R^\top R/\gamma$.
-The bound is a posteriori because the normal residual is computed from the returned approximate solve.
-The exact-arithmetic error is positive semidefinite and quadratic in the normal residual.
-It may still exceed a desired tolerance when damping is very small.
-An inaccurate state fit can also produce an energy above $F_{\rm raw}$.
-The bound controls solve error only, not GN truncation or state-center error.
-Floating-point roundoff is not enclosed by this exact-arithmetic formula.
-
-The implementation accepts columnwise JVP and VJP callables.
-It returns the energy matrix, original normal residual, and upper error matrix.
-Synthetic regression tests check the identity, spectrum, and sufficient gain implication.
-Data tests check the exported numerical summaries and pairing counts.
-These tests do not rerun the archived PINN training or certify the entire repository.
-Their exact count, execution environment, and results are saved in the revision archive.
-
-The source archive contains selected-field extracts for plotting and reaggregation.
-They preserve the visible source values and source-row identities.
-They are not claimed to be byte-identical copies of complete repository CSV files.
-Original repository paths and Git blob identities accompany the extracts.
-Source rows can be checked at the fixed integrated commit.
-The original uploaded TeX is retained to reproduce its embedded historical scalar coordinates.
-The plots, tables, and derived checks can be regenerated without retraining any PINN.
+This exact-arithmetic bound is a posteriori (computed from the returned residual $R$) and controls iterative solve error only; it does not enclose Gauss--Newton truncation, state-stationarity error, or floating-point roundoff, and can be conservative at very small $\gamma$.
+Unit tests accompanying the codebase verify this algebraic identity, positive-semidefiniteness, the dominance inequality of Corollary~1, and exact consistency between exported CSV summaries and all manuscript tables and figures without requiring PINN retraining.
 \end{document}

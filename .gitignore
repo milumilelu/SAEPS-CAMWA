@@ -1,0 +1,10 @@
+.venv/
+__pycache__/
+.pytest_cache/
+review/
+*.aux
+*.log
+*.out
+*.spl
+manuscript.pdf
+supplement.pdf

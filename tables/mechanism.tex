@@ -1,17 +1,17 @@
 \begin{table}[!htbp]
 \centering
-\caption{The state-freezing term dominates the observed error budgets.}
+\caption{Error-budget decomposition showing that omitted state relaxation ($E_{\rm fix}$) dominates Gauss--Newton truncation ($E_{\rm GN,fix}$).}
 \label{tab:mechanism}
 \small
 \setlength{\tabcolsep}{4pt}
-\begin{tabular}{l S[table-format=2.4] S[table-format=1.6] S[table-format=1.6] S[table-format=1.3e-1,scientific-notation=true]}
+\begin{tabular}{l S[table-format=2.2] S[table-format=1.4] S[table-format=1.4] S[table-format=1.3e-1,scientific-notation=true]}
 \toprule
 {Problem} & {$E_{\rm fix}$} & {$E_{\rm GN,fix}$} & {$E_{\rm SAEPS}$} & {$E_{\rm relax}$} \\
 \midrule
-Burgers & 27.75 & 0.1563 & 0.07503 & 0.00308 \\
-Allen--Cahn & 19.95 & 0.2903 & 0.2786 & 0.00234 \\
-Saturation & 16.8 & 0.001181 & 0.001247 & 1.259e-05 \\
+Burgers & 27.75 & 0.1563 & 0.0750 & 3.080e-03 \\
+Allen--Cahn & 19.95 & 0.2903 & 0.2786 & 2.340e-03 \\
+Saturation & 16.80 & 0.0012 & 0.0012 & 1.259e-05 \\
 \bottomrule
 \end{tabular}
-\par\vspace{3pt}\begin{minipage}{.98\linewidth}\footnotesize Entries are medians over 12, 9, and 24 accepted fits, respectively. The first three errors share the reduced-curvature denominator. The correction error $E_{\rm relax}$ uses $|C_{\rm relax}^{\rm exact}|+10^{-8}$. Historical decomposition values retain their archived precision; the two normalizations are not interchangeable.\end{minipage}
+\par\vspace{3pt}\begin{minipage}{.98\linewidth}\footnotesize Entries are medians over $12$, $9$, and $24$ valid fits, respectively (exact unrounded saturation medians are $E_{\rm GN,fix}=\SaturationGNError$ and $E_{\rm SAEPS}=\SaturationFitError$). The first three columns share the reduced-curvature denominator $|\Hred|+10^{-8}$, whereas $E_{\rm relax}$ is normalized by $|\Cexact|+10^{-8}$.\end{minipage}
 \end{table}

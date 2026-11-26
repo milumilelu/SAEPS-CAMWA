@@ -1,22 +1,11 @@
-"""Rebuild transparent plot/table inputs from the uploaded source and extracted records.
-No training is performed. Extracts retain source identity in review/SOURCES.json.
+"""Recompute derived plot and table inputs from the released numerical extracts.
+See the README for the upstream paths and cohort definitions.
 """
 from pathlib import Path
-import re, json, numpy as np, pandas as pd
+import json, numpy as np, pandas as pd
 ROOT=Path(__file__).resolve().parents[1]
 D=ROOT/'data'
-text=(ROOT/'review'/'input_integrated.tex').read_text()
-# These four coordinate blocks are the full-precision plotted historical records.
-chunk=text.split(r'\label{sec:scalar_results}',1)[1].split(r'\subsection{Exact decomposition',1)[0]
-arrays=[]
-for s in re.findall(r'coordinates\s*\{([^}]+)\}',chunk):
-    vals=re.findall(r'\((\d+),([-+0-9.eE]+)\)',s)
-    if len(vals) in (12,9): arrays.append([float(v) for _,v in vals])
-assert list(map(len,arrays))[:4]==[12,12,9,9]
-rows=[]
-for name,seeds,raw,sa in [('Burgers',[55,56,58,59,60,62,64,65,66,67,68,69],arrays[0],arrays[1]),('Allen-Cahn',[75,76,77,78,79,80,82,83,84],arrays[2],arrays[3])]:
-    for seed,a,b in zip(seeds,raw,sa): rows.append(dict(cohort=name,seed=seed,E_raw=a,E_SAEPS=b))
-h=pd.DataFrame(rows);h.to_csv(D/'historical_scalar.csv',index=False,float_format='%.17g')
+h=pd.read_csv(D/'historical_scalar.csv')
 e3=pd.read_csv(D/'e3_heldout_corrected.csv')
 assert len(e3)==24 and not e3.duplicated(['data_seed','initialization_seed','noise_level']).any()
 metrics=['E_raw','E_SAEPS','E_fix','E_GN_fix','E_relax']
@@ -51,5 +40,7 @@ summary['E6_unique_new_fits']=12
 summary['E6_base_reused']=6
 summary['E6_improves_over_raw']=int((e6.E_SAEPS<e6.E_raw).sum())
 summary['derived_gain_condition']={'classification':'NEW_POSTHOC_DERIVED_20260920','records':18,'unique_added_beyond_E3':12,'condition_holds':int((e6.gain_ratio<1).sum()),'max_ratio':float(e6.gain_ratio.max()),'note':'Requires exact blocks; only an explanatory sufficient condition.'}
-(ROOT/'review'/'recomputed_summary.json').write_text(json.dumps(summary,indent=2,allow_nan=False))
+review=ROOT/'review'
+review.mkdir(exist_ok=True)
+(review/'recomputed_summary.json').write_text(json.dumps(summary,indent=2,allow_nan=False))
 print(json.dumps(summary,indent=2))

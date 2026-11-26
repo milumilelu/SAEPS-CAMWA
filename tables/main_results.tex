@@ -1,6 +1,6 @@
 \begin{table}[!htbp]
 \centering
-\caption{State-relaxed curvature improves the matched exact-Hessian Schur comparison.}
+\caption{Primary scalar curvature comparison against exact finite-$\gamma$ reduced-Hessian references at $\alpha=10^{-8}$. Bold entries denote the lower median error per benchmark.}
 \label{tab:main_results}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -8,10 +8,10 @@
 \toprule
 {Problem} & {Valid/planned} & {Units} & {Median $E_{\rm raw}$} & {Median $E_{\rm SAEPS}$} & {$p$} \\
 \midrule
-Burgers & 12/15 & 12 & 27.7268 & 0.0750 & 2.44e-04 \\
-Allen--Cahn & 9/10 & 9 & 20.3728 & 0.2786 & 1.95e-03 \\
-Saturation & 24/24 fits & 6 seeds & 16.8165 & 0.001060 & 1.5625e-02 \\
+Burgers & 12/15 & 12 & 27.7268 & \bfseries 0.0750 & 2.44e-04 \\
+Allen--Cahn & 9/10 & 9 & 20.3728 & \bfseries 0.2786 & 1.95e-03 \\
+Saturation & 24/24 fits & 6 seeds & 16.8165 & \bfseries 0.001060 & 1.5625e-02 \\
 \bottomrule
 \end{tabular}
-\par\vspace{3pt}\begin{minipage}{.98\linewidth}\footnotesize Errors are dimensionless. Historical units are accepted checkpoints. Saturation units are six data-seed medians, each pooling four dependent fits. All 24 saturation fits improve individually. Values of $p$ are exact, one-sided sign tests under $H_0:\Pr(D>0\mid D\ne0)=1/2$; no ties occur. They are unadjusted for multiplicity. Saturation cross-noise pooling and its seed-level test are post hoc. Failed cases remain in planned-cohort counts, not in numerical-error summaries.\end{minipage}
+\par\vspace{3pt}\begin{minipage}{.98\linewidth}\footnotesize Errors are dimensionless relative discrepancies against $\Hred$. Burgers and Allen--Cahn units are valid checkpoints; saturation units are six held-out data-seed medians (each pooling four dependent fits across two initializations and two noise levels). All $24$ saturation fits improve individually. Values of $p$ are unadjusted, exact one-sided sign tests under $H_0:\Pr(D>0\mid D\ne0)=1/2$ with no ties; saturation cross-noise pooling is post hoc. Invalid checkpoints remain in planned counts and are excluded from numerical-error summaries.\end{minipage}
 \end{table}

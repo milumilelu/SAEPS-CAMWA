@@ -8,10 +8,10 @@ import numpy as np
 import pandas as pd
 import matplotlib
 matplotlib.use('Agg')
+matplotlib.rcParams['pdf.fonttype']=42
 import matplotlib.pyplot as plt
 ROOT=Path(__file__).resolve().parents[1]; D=ROOT/'data'; OUT=ROOT/'figures'
 OUT.mkdir(exist_ok=True)
-S=json.loads((ROOT/'review/recomputed_summary.json').read_text())
 h=pd.read_csv(D/'historical_scalar.csv');e3=pd.read_csv(D/'e3_heldout_corrected.csv')
 seed=pd.read_csv(D/'e3_pooled_seed_summary.csv');e6=pd.read_csv(D/'e6_metrics_recomputed.csv')
 cost=pd.read_csv(D/'e8_timing_summary.csv');profile=pd.read_csv(D/'e7_profile_extract.csv')
@@ -60,36 +60,40 @@ a.set_ylabel('Median relative error (common denominator)',fontsize=10)
 a.legend(frameon=False,loc='upper center',bbox_to_anchor=(.5,1.2),ncol=1,fontsize=9)
 save(f,'fig03_error_mechanisms')
 
-# Actual paired fits rather than a median-only architecture claim.
-f,a=start(6.8,3.8)
+# Actual paired fits with frozen-state baseline visible on the same log axis.
+f,a=start(6.8,3.9)
 for (ds,ins),v in e6.groupby(['data_seed','initialization_seed']):
- v=v.sort_values('n_theta');a.plot(range(3),v.E_SAEPS,marker='o',markersize=4,linewidth=.9,alpha=.5)
-med=e6.groupby('n_theta').E_SAEPS.median().reindex([65,129,337])
-a.plot(range(3),med,marker='D',linewidth=2.4,markersize=7,label='Fit median')
-a.set_yscale('log');a.set_ylim(3e-5,8e-3);a.set_xlim(-.18,2.18)
+ v=v.sort_values('n_theta')
+ a.plot(range(3),v.E_raw,marker='s',markersize=3.5,linewidth=.8,alpha=.28,color='#888888')
+ a.plot(range(3),v.E_SAEPS,marker='o',markersize=4,linewidth=.9,alpha=.5,color='#1f77b4')
+med_raw=e6.groupby('n_theta').E_raw.median().reindex([65,129,337])
+med_se=e6.groupby('n_theta').E_SAEPS.median().reindex([65,129,337])
+a.plot(range(3),med_raw,marker='s',linestyle='--',linewidth=2.2,markersize=6,color='#444444',label='Frozen-state median ($E_{\\rm raw}$)')
+a.plot(range(3),med_se,marker='D',linewidth=2.4,markersize=6.5,color='#0055a4',label='SAEPS median ($E_{\\rm SAEPS}$)')
+a.set_yscale('log');a.set_ylim(3e-5,8e1);a.set_xlim(-.18,2.18)
 a.set_xticks(range(3),['65','129','337']); a.set_xlabel(r'State parameters $n_\theta$',fontsize=11)
-a.set_ylabel('SAEPS relative error',fontsize=11)
-a.legend(frameon=False,loc='upper right')
-a.text(.02,.04,'Each thin line tracks one data / initialization pair.',transform=a.transAxes,fontsize=9)
+a.set_ylabel('Relative error against exact Schur reference',fontsize=10.5)
+a.legend(frameon=False,loc='center right',fontsize=9)
 save(f,'fig04_architecture_pairs')
 
-# E8: include the dense baseline, and keep the two centers distinct.
-f,a=start(6.8,3.75)
+# E8: include the dense baseline, and distinguish the two coupled checkpoints cleanly by linestyle.
+f,a=start(6.8,3.8)
+colors={'Dense':'#1f77b4','CG':'#ff7f0e','Scaled LSQR':'#2ca02c'}
 for method,mark in [('Dense','s'),('CG','o'),('Scaled LSQR','^')]:
- xx=[];yy=[]
- for sd in [215,224]:
+ for sd,ls in [(215,'-'),(224,'--')]:
   z=cost[(cost.seed==sd)&(cost.method==method)].sort_values('alpha')
-  xx+=list(z.alpha)+[np.nan];yy+=list(z.solve_seconds)+[np.nan]
- a.plot(xx,yy,marker=mark,markersize=5,linewidth=1.25,label=method)
+  a.plot(z.alpha,z.solve_seconds,marker=mark,markersize=5,linewidth=1.35,linestyle=ls,color=colors[method])
 a.set_xscale('log');a.set_yscale('log');a.set_ylim(3e-5,3e2)
 a.set_xlabel(r'Damping scale $\alpha$',fontsize=11);a.set_ylabel('Median solve / factorization time (s)',fontsize=10)
-# Label the two CG centers at the right end of their curves.
-for sd,dy in [(215,6),(224,-8)]:
- z=cost[(cost.seed==sd)&(cost.method=='CG')].sort_values('alpha')
- a.annotate(str(sd), xy=(z.alpha.iloc[-1], z.solve_seconds.iloc[-1]),
-            xytext=(6,dy), textcoords='offset points', fontsize=8, va='center')
-a.legend(frameon=False,loc='center left',bbox_to_anchor=(1.0,.5),fontsize=9)
-# Repetition and center counts are stated in the caption.
+from matplotlib.lines import Line2D
+handles=[
+ Line2D([0],[0],color=colors['Dense'],marker='s',linewidth=1.4,markersize=5,label='Dense Cholesky'),
+ Line2D([0],[0],color=colors['CG'],marker='o',linewidth=1.4,markersize=5,label='Matrix-free CG'),
+ Line2D([0],[0],color=colors['Scaled LSQR'],marker='^',linewidth=1.4,markersize=5,label='Scaled LSQR'),
+ Line2D([0],[0],color='#333333',linestyle='-',linewidth=1.4,label='Checkpoint 1 (seed 215)'),
+ Line2D([0],[0],color='#333333',linestyle='--',linewidth=1.4,label='Checkpoint 2 (seed 224)'),
+]
+a.legend(handles=handles,frameon=False,loc='center left',bbox_to_anchor=(1.02,.5),fontsize=8.8)
 save(f,'fig05a_matched_cost')
 f,a=start(6.8,3.75)
 for method,mark in [('CG','o'),('Scaled LSQR','^')]:
@@ -126,11 +130,16 @@ for name,vals,yl in [('s01_retained_fraction',[.045627,.0482649,.065335,.130094,
  # Availability is stated in each caption to avoid obscuring the curves.
  save(f,name)
 
+import matplotlib.ticker as mticker
 f,a=start(5.8,3.3)
 for n,t,m in [(1001,[.353524,.431057,.650188],'o'),(10001,[.436132,.926875,3.9367],'s'),(100001,[1.88744,8.31442,40.9669],'^')]:
- a.plot([213,853,3413],t,marker=m,label=fr'$n_\theta={n}$')
-a.set_xscale('log');a.set_yscale('log');a.set_xticks([213,853,3413],['213','853','3413'])
-a.set_xlabel('Residual count');a.set_ylabel('Median iterative time (s)')
+ a.plot([213,853,3413],t,marker=m,label=fr'$n_\theta={n:,}$')
+a.set_xscale('log');a.set_yscale('log')
+a.set_xticks([213,853,3413]);a.set_xticklabels(['213','853','3413'])
+a.xaxis.set_minor_locator(mticker.NullLocator())
+a.xaxis.set_minor_formatter(mticker.NullFormatter())
+a.set_xlim(170,4300)
+a.set_xlabel('Residual count $m$');a.set_ylabel('Median iterative time (s)')
 a.legend(frameon=False,fontsize=9);save(f,'s03_operator_scaling')
 
 # Supplementary noise-stratified E3 data-seed medians.

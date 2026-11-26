@@ -1,6 +1,6 @@
 \begin{table}[!htbp]
 \centering
-\caption{The advantage persists across paired, trained architectures.}
+\caption{Paired curvature errors across trained architectures on the saturation problem. Bold entries denote the lower median error per architecture.}
 \label{tab:architecture}
 \small
 \setlength{\tabcolsep}{4pt}
@@ -8,10 +8,10 @@
 \toprule
 {Architecture} & {$n_\theta$} & {Valid} & {Median $E_{\rm raw}$} & {Median $E_{\rm SAEPS}$} & {Coefficient error} \\
 \midrule
-2--16--1 & 65 & 6/6 & 16.797 & 0.0009224 & 0.01302 \\
-2--32--1 & 129 & 6/6 & 16.931 & 0.0006087 & 0.007905 \\
-2--16--16--1 & 337 & 6/6 & 17.266 & 0.0004322 & 0.004592 \\
+2--16--1 & 65 & 6/6 & 16.797 & \bfseries 0.0009224 & 0.01302 \\
+2--32--1 & 129 & 6/6 & 16.931 & \bfseries 0.0006087 & 0.007905 \\
+2--16--16--1 & 337 & 6/6 & 17.266 & \bfseries 0.0004322 & 0.004592 \\
 \bottomrule
 \end{tabular}
-\par\vspace{3pt}\begin{minipage}{.98\linewidth}\footnotesize Each architecture uses three data seeds and two initializations at noise 0.02. Six base fits are reused from E3; twelve fits are additional. The last column is the median saturation coefficient error $|\widehat\kappa-\kappa^\star|/\kappa^\star$ of the underlying PINN fits, not an error of SAEPS. Post-training diagnosis does not update $\widehat\kappa$.\end{minipage}
+\par\vspace{3pt}\begin{minipage}{.98\linewidth}\footnotesize Each architecture evaluates three data seeds and two initializations at observation noise $0.02$. The six base ($n_\theta=65$) fits are shared with the main saturation cohort; twelve wider and deeper fits are additional. The rightmost column reports the median parameter error $|\widehat\kappa-\kappa^\star|/\kappa^\star$ of the underlying PINN fits, which post-training SAEPS leaves unchanged.\end{minipage}
 \end{table}
